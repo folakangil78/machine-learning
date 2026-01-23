@@ -8,6 +8,7 @@
 import numpy as np
 import pandas as pd
 import random
+import matplotlib.pyplot as plt
 
 # Reproducibility
 SEED = 13639406
@@ -199,6 +200,35 @@ test_df['pred'] = test_df.apply(predict, axis=1)
 
 rmse = np.sqrt(np.mean((test_df['rating'] - test_df['pred']) ** 2))
 print("Test RMSE:", rmse)
+
+# vis 1 seasonal bias heatmap
+avg_seasonal_bias = bm_month.mean(axis=0)
+
+plt.figure(figsize=(10,4))
+plt.plot(range(1,13), avg_seasonal_bias, marker='o')
+plt.xticks(range(1,13))
+plt.xlabel("Month")
+plt.ylabel("Average Seasonal Movie Bias")
+plt.title("Seasonal Effect in Movie Ratings Learned by Model")
+plt.grid(True)
+plt.show()
+
+# vis 2 prediction error vs movie popularity
+movie_counts = train_df['movie_id'].value_counts()
+test_df['movie_freq'] = test_df['movie_id'].map(movie_counts)
+
+plt.figure(figsize=(8,6))
+plt.scatter(
+    test_df['movie_freq'],
+    test_df['rating'] - test_df['pred'],
+    alpha=0.4
+)
+plt.xscale('log')
+plt.axhline(0, color='red', linestyle='--')
+plt.xlabel("Movie Rating Count (log scale)")
+plt.ylabel("Prediction Error")
+plt.title("Model Error vs Movie Popularity")
+plt.show()
 
 
 
