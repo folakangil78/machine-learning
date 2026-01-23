@@ -131,6 +131,49 @@ n_users = len(user_map)
 n_movies = len(movie_map)
 n_factors = 30   # sweet spot for speed vs accuracy
 
+# hyperparams
+lr = 0.01
+reg = 0.05
+epochs = 10
 
+# Global mean
+mu = train_df['rating'].mean()
+
+# Parameters
+bu = np.zeros(n_users)
+bm = np.zeros(n_movies)
+bm_month = np.zeros((n_movies, 12))
+
+P = 0.1 * np.random.randn(n_users, n_factors)
+Q = 0.1 * np.random.randn(n_movies, n_factors)
+
+for epoch in range(epochs):
+    train_df = train_df.sample(frac=1.0, random_state=SEED + epoch)
+
+    for row in train_df.itertuples():
+        u = user_map[row.user_id]
+        m = movie_map[row.movie_id]
+        month = row.month - 1
+        r = row.rating
+
+        pred = (
+            mu
+            + bu[u]
+            + bm[m]
+            + bm_month[m, month]
+            + np.dot(P[u], Q[m])
+        )
+
+        err = r - pred
+
+        # Updates
+        bu[u] += lr * (err - reg * bu[u])
+        bm[m] += lr * (err - reg * bm[m])
+        bm_month[m, month] += lr * (err - reg * bm_month[m, month])
+
+        P[u] += lr * (err * Q[m] - reg * P[u])
+        Q[m] += lr * (err * P[u] - reg * Q[m])
+
+    print(f"Epoch {epoch+1}/{epochs} complete")
 
 
