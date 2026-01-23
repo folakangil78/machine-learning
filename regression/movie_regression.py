@@ -131,6 +131,8 @@ n_users = len(user_map)
 n_movies = len(movie_map)
 n_factors = 30   # sweet spot for speed vs accuracy
 
+# training loop and model init
+
 # hyperparams
 lr = 0.01
 reg = 0.05
@@ -175,5 +177,28 @@ for epoch in range(epochs):
         Q[m] += lr * (err * P[u] - reg * Q[m])
 
     print(f"Epoch {epoch+1}/{epochs} complete")
+    
+# prediction and rmse on test set
+def predict(row):
+    u = user_map.get(row.user_id)
+    m = movie_map.get(row.movie_id)
+    month = row.month - 1
+
+    if u is None or m is None:
+        return mu
+
+    return (
+        mu
+        + bu[u]
+        + bm[m]
+        + bm_month[m, month]
+        + np.dot(P[u], Q[m])
+    )
+
+test_df['pred'] = test_df.apply(predict, axis=1)
+
+rmse = np.sqrt(np.mean((test_df['rating'] - test_df['pred']) ** 2))
+print("Test RMSE:", rmse)
+
 
 
