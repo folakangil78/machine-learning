@@ -92,8 +92,29 @@ print("Train size:", train_df.shape)
 print("Test size:", test_df.shape)
 print("Unique movies in test:", test_df['movie_id'].nunique())
 
-# preprocessing after split to prevent leakage
+'''
+    preprocessing after split to prevent leakage
+    keeping data in long format, allowing data-absence to carry signal
+    normalize ratings and remove user/movie bias
+    user not rating a movie is meaningful, so not replacing with 0s
+    preserves user taste, movie popularity, selective exposure behavior
+'''
+# user and movie means (only training data)
+user_mean = train_df.groupby('user_id')['rating'].mean()
+movie_mean = train_df.groupby('movie_id')['rating'].mean()
+global_mean = train_df['rating'].mean()
 
+def normalize(row):
+    u = row['user_id']
+    m = row['movie_id']
+    return (
+        row['rating']
+        - user_mean.get(u, global_mean)
+        - movie_mean.get(m, global_mean)
+        + global_mean
+    )
+
+train_df['rating_norm'] = train_df.apply(normalize, axis=1)
 
 
 
