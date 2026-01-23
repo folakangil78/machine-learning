@@ -116,5 +116,21 @@ def normalize(row):
 
 train_df['rating_norm'] = train_df.apply(normalize, axis=1)
 
+# Add temporal features, discretize into month of year buckets for signal
+for df in [train_df, test_df]:
+    df['month'] = df['date'].dt.month
+    
+# Reindex users and movies
+user_ids = train_df['user_id'].unique()
+movie_ids = train_df['movie_id'].unique()
+
+user_map = {u: i for i, u in enumerate(user_ids)}
+movie_map = {m: i for i, m in enumerate(movie_ids)}
+
+n_users = len(user_map)
+n_movies = len(movie_map)
+n_factors = 30   # sweet spot for speed vs accuracy
+
+
 
 
