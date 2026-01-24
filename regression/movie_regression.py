@@ -201,7 +201,7 @@ test_df['pred'] = test_df.apply(predict, axis=1)
 rmse = np.sqrt(np.mean((test_df['rating'] - test_df['pred']) ** 2))
 print("Test RMSE:", rmse)
 
-# vis 1 seasonal bias heatmap
+# vis 1 seasonal bias line plot
 avg_seasonal_bias = bm_month.mean(axis=0)
 
 plt.figure(figsize=(10,4))
@@ -213,22 +213,58 @@ plt.title("Seasonal Effect in Movie Ratings Learned by Model")
 plt.grid(True)
 plt.show()
 
-# vis 2 prediction error vs movie popularity
-movie_counts = train_df['movie_id'].value_counts()
-test_df['movie_freq'] = test_df['movie_id'].map(movie_counts)
+# vis 2: calibration curve by true rating (model reliability plot)
 
-plt.figure(figsize=(8,6))
-plt.scatter(
-    test_df['movie_freq'],
-    test_df['rating'] - test_df['pred'],
-    alpha=0.4
+# Bin by true rating (1–5 stars)
+calibration = (
+    test_df
+    .groupby('rating')
+    .agg(
+        mean_prediction=('pred', 'mean'),
+        count=('pred', 'size')
+    )
+    .reset_index()
 )
-plt.xscale('log')
-plt.axhline(0, color='red', linestyle='--')
-plt.xlabel("Movie Rating Count (log scale)")
-plt.ylabel("Prediction Error")
-plt.title("Model Error vs Movie Popularity")
+
+plt.figure(figsize=(7,6))
+
+# Perfect calibration reference
+plt.plot(
+    [1, 5],
+    [1, 5],
+    linestyle='--',
+    color='gray',
+    label='Perfect calibration'
+)
+
+# Model calibration curve
+plt.plot(
+    calibration['rating'],
+    calibration['mean_prediction'],
+    marker='o',
+    linewidth=2,
+    label='Model prediction'
+)
+
+# Annotate sample sizes
+for _, row in calibration.iterrows():
+    plt.text(
+        row['rating'],
+        row['mean_prediction'] + 0.05,
+        f"n={int(row['count'])}",
+        ha='center',
+        fontsize=9
+    )
+
+plt.xticks([1, 2, 3, 4, 5])
+plt.yticks([1, 2, 3, 4, 5])
+plt.xlabel("True Rating")
+plt.ylabel("Average Predicted Rating")
+plt.title("Model Calibration by True Rating")
+plt.legend()
+plt.grid(True)
 plt.show()
+
 
 
 
