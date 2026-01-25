@@ -59,11 +59,58 @@ movies_path = "dataSet/movieTitles.csv"   # movie_id, release_date, title
 movies_df = pd.read_csv(
     movies_path,
     header=None,
-    names=['movie_id', 'release_date', 'title']
+    names=[
+        "movie_id",
+        "release_year",
+        "title",
+        "junk1",
+        "junk2" # two empty fields for whatever reason, corrupted csv
+    ],
+    engine="python"
 )
 
-movies_df['release_date'] = pd.to_datetime(movies_df['release_date'], format='%Y', errors='coerce')
+print(movies_df.head())
+print()
+print(movies_df.dtypes)
+print()
+print(movies_df.isna().mean())
+print()
 
+# Drop the junk columns
+movies_df = movies_df.drop(columns=["junk1", "junk2"])
+
+movies_df = movies_df.reset_index(drop=True)
+
+# Enforce correct dtypes
+movies_df['movie_id'] = pd.to_numeric(
+    movies_df['movie_id'],
+    errors='coerce'
+)
+
+movies_df['release_year'] = pd.to_numeric(
+    movies_df['release_year'],
+    errors='coerce'
+)
+
+movies_df = movies_df.dropna(subset=['movie_id', 'release_year'])
+movies_df['movie_id'] = movies_df['movie_id'].astype(int)
+movies_df['release_year'] = movies_df['release_year'].astype(int)
+
+# Convert release year → datetime (Jan 1 of that year)
+movies_df['release_date'] = pd.to_datetime(
+    movies_df['release_year'],
+    format='%Y',
+)
+
+# redundant col cleanup
+movies_df = movies_df.drop(columns=['release_year'])
+
+print(movies_df.head())
+print()
+print(movies_df.dtypes)
+print()
+print(movies_df.isna().mean())
+print()
 
 # test split fxn
 def leave_one_out_by_movie(df, seed=SEED):
@@ -100,7 +147,7 @@ print("Unique movies in test:", test_df['movie_id'].nunique())
     user not rating a movie is meaningful, so not replacing with 0s
     preserves user taste, movie popularity, selective exposure behavior
 '''
-# user and movie means (only training data)
+# user and movie means (only training data) IMPUTATION BEGIN HERE
 user_mean = train_df.groupby('user_id')['rating'].mean()
 movie_mean = train_df.groupby('movie_id')['rating'].mean()
 global_mean = train_df['rating'].mean()
@@ -264,6 +311,7 @@ plt.title("Model Calibration by True Rating")
 plt.legend()
 plt.grid(True)
 plt.show()
+
 
 
 
