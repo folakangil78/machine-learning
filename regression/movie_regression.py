@@ -312,7 +312,101 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+# Rating Effect vs Years Since Release
 
+assert ratings_df['movie_id'].dtype == int
+assert movies_df['movie_id'].dtype == int
+
+print("Movie ID Overlap b/w DFs:", 
+      ratings_df['movie_id'].isin(movies_df['movie_id']).mean())
+print()
+assert ratings_df['movie_id'].isin(movies_df['movie_id']).mean() > 0.9, \
+    "Movie IDs do not align — movies_df parsed incorrectly"
+
+# Merge ratings with movie release year
+ratings_with_release = ratings_df.merge(
+    movies_df[['movie_id', 'release_date']],
+    on='movie_id',
+    how='inner'
+)
+
+# Drop rows where release year is missing
+ratings_with_release = ratings_with_release.dropna(subset=['release_date'])
+
+# Compute years since release
+ratings_with_release['years_since_release'] = (
+    ratings_with_release['date'].dt.year
+    - ratings_with_release['release_date'].dt.year
+)
+
+# Remove obviously invalid cases (ratings before release, data issues)
+ratings_with_release = ratings_with_release[
+    ratings_with_release['years_since_release'] >= 0
+]
+
+# Bin years since release (nonlinear bins for interpretability)
+bins = [0, 1, 2, 5, 10, 20, 30, 50, 100]
+labels = [
+    "0–1",
+    "1–2",
+    "2–5",
+    "5–10",
+    "10–20",
+    "20–30",
+    "30–50",
+    "50+"
+]
+
+print()
+print("Number of years between movie release and when the rating was done:")
+print()
+print(ratings_with_release['years_since_release'].describe())
+print()
+
+ratings_with_release['release_gap_bin'] = pd.cut(
+    ratings_with_release['years_since_release'],
+    bins=bins,
+    labels=labels,
+    right=False
+)
+
+# Aggregate
+gap_summary = (
+    ratings_with_release
+    .groupby('release_gap_bin', observed=True)
+    .agg(
+        avg_rating=('rating', 'mean'),
+        count=('rating', 'size')
+    )
+    .reset_index()
+)
+print(gap_summary) # sanity check pre-plot, verify successful binning
+
+# Plot
+plt.figure(figsize=(9,6))
+
+plt.plot(
+    gap_summary['release_gap_bin'],
+    gap_summary['avg_rating'],
+    marker='o',
+    linewidth=2
+)
+
+# Annotate counts
+for i, row in gap_summary.iterrows():
+    plt.text(
+        i,
+        row['avg_rating'] + 0.03,
+        f"n={row['count']:,}",
+        ha='center',
+        fontsize=9
+    )
+
+plt.xlabel("Years Since Movie Release")
+plt.ylabel("Average Rating")
+plt.title("How Movie Ratings Change as Films Age")
+plt.grid(True)
+plt.show()
 
 
 
