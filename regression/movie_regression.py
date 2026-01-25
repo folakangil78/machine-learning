@@ -407,6 +407,3 @@ plt.ylabel("Average Rating")
 plt.title("How Movie Ratings Change as Films Age")
 plt.grid(True)
 plt.show()
-
-
-
