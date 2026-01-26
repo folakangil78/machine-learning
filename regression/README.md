@@ -202,8 +202,8 @@ This pattern quantifies **survivorship bias**: contemporary ratings of legacy co
 
 * Temporal effects are **first-order signals**, not noise, in recommender systems
 * Regularized matrix factorization can be extended to model interpretable seasonal structure
-* Calibration diagnostics are critical for understanding *how* models fail, not just *how much*
-* User interaction data reflects selection effects as much as preference for what is being selected
+* Calibration diagnostics are critical for understanding *how* models fail, not just by *how much*
+* User interaction data reflects effects on selection just as much as preference for what is being selected
 
 ---
 
