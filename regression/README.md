@@ -17,7 +17,7 @@ This repository is designed to function both as:
 
 ---
 
-## 📊 Dataset Context
+## Dataset Context
 
 ### Netflix Cinematch Subset
 
@@ -31,7 +31,7 @@ This subset preserves the statistical and behavioral properties of the full data
 
 ### Raw Data Structure
 
-The dataset is distributed across multiple raw `.txt` and `.csv` files, including:
+The dataset is distributed across raw `.txt` and `.csv` files, including:
 
 * **User–Movie Rating Logs**  
   Structured as repeated movie blocks followed by `(user_id, rating, timestamp)` triplets.
@@ -42,7 +42,7 @@ All files lack explicit headers and require custom parsing logic before ingestio
 
 ---
 
-## ⚙️ Data Engineering & Preprocessing
+## Data Engineering & Preprocessing
 
 ### Parsing Large-Scale Text Data
 
@@ -62,67 +62,66 @@ Missing values primarily appeared in:
 * Sparse user–movie interactions (inherent to recommender systems)
 
 Design choices:
-* **Metadata rows with irrecoverable missing fields were dropped**, as they represented a negligible fraction of the dataset.
-* **No imputation was applied to ratings**, preserving the sparsity structure critical to collaborative filtering.
+* **Metadata rows with irrecoverable missing fields were dropped** (e.g., undefined movie release years), as they represented a negligible fraction of the dataset.
+* **No explicit imputation was applied to ratings**, with the sparsity structure preserved and modeled implicitly through the factorization framework (maintaining movie-rater selectivity).
 
-This avoided introducing artificial signal while maintaining interpretability.
+This avoided introducing artificial signal while maintaining interpretability. Model regularization and bias terms were used to handle sparsity implicitly.
 
 ---
 
-## 🧠 Model Architecture
+## Model Architecture
 
 ### Regularized Matrix Factorization (Regression Formulation)
 
-The recommender system is formulated as a **regularized regression problem**:
+The recommender system is interpreted as a **regularized regression problem** where ratings are modeled as:
 
 \[
 \hat{r}_{ui} = \mu + b_u + b_i + b_t + p_u^\top q_i
 \]
 
 Where:
-- \( \mu \) is the global mean rating  
-- \( b_u \) and \( b_i \) are user and item bias terms  
-- \( b_t \) is a **learned temporal (seasonal) bias**  
-- \( p_u \) and \( q_i \) are latent factor vectors  
+* \( \mu \) is the global mean rating  
+* \( b_u \) and \( b_i \) are user and item bias terms  
+* \( b_t \) is a **learned temporal (seasonal) bias**  
+* \( p_u \) and \( q_i \) are latent factor vectors  
 
 ### Optimization
 
-- Trained using **Stochastic Gradient Descent (SGD)**
-- L2 regularization applied to all bias and latent components
-- Factor dimensionality and learning rates tuned for stability and computational efficiency
+* Trained using **Stochastic Gradient Descent (SGD)**
+* L2 regularization applied to all bias and latent components
+* Factor dimensionality and learning rates tuned for stability and compute efficiency
 
 ---
 
-## 🎯 Design Choices & Rationale
+## Design Choices & Rationale
 
-### Why Matrix Factorization?
+### Matrix Factorization
 
-- Proven effectiveness for sparse, high-dimensional interaction data
-- Interpretable decomposition into biases and latent structure
-- Strong empirical performance relative to computational cost
+* Proven effectiveness for sparse, high-dimensional interaction data
+* Interpretable decomposition into biases and latent structure
 
-### Why Explicit Temporal Bias?
+### Explicit Temporal Bias Term
 
 Ratings are **not exchangeable over time**:
-- Seasonal sentiment fluctuations (holidays, summer releases)
-- Platform usage patterns vary throughout the year
+* Seasonal sentiment fluctuations (holidays, summer releases)
+* Platform usage patterns vary throughout the year
 
 Modeling time as a learned bias term allows the system to:
-- Correct systematic error
-- Improve RMSE without increasing latent complexity
-- Enable post-hoc interpretability of temporal effects
+* Correct systematic error
+* Improve RMSE without increasing latent complexity
+* Enable post-hoc interpretability of temporal effects
 
 ---
 
-## 🚧 Key Modeling Challenges & Solutions
+## Key Modeling Challenges & Solutions
 
 ### 1. Non-Normal Rating Distributions
 Movie ratings are discrete, bounded, and heavily skewed.
 
 **Solution:**
-- No Gaussian assumptions were imposed
-- Evaluation focused on empirical calibration and RMSE
-- Regularization mitigated overfitting to skewed extremes
+* No Gaussian assumptions were imposed
+* Evaluation focused on empirical calibration/RMSE
+* Regularization mitigated overfitting to skewed extremes
 
 ---
 
@@ -130,9 +129,9 @@ Movie ratings are discrete, bounded, and heavily skewed.
 Training on tens of millions of rows introduces practical limitations.
 
 **Solution:**
-- Careful factor dimensionality selection
-- Single-pass SGD with optimized memory usage
-- Subset-based experimentation before full training runs
+* Careful factor dimensionality selection
+* Single-pass SGD with optimized memory usage
+* Subset-based experimentation and merges before full training runs
 
 ---
 
@@ -140,36 +139,34 @@ Training on tens of millions of rows introduces practical limitations.
 User sentiment varies by time of year, independent of movie quality.
 
 **Solution:**
-- Introduced a **monthly temporal kernel** as an additive bias term
-- Learned jointly during SGD optimization
-- Isolated post-training for interpretability
+* Introduced a **monthly temporal kernel** as an additive bias term
+* Learned jointly during SGD optimization
 
 ---
 
-## 📈 Results & Analysis
+## Results & Analysis
 
 ### **Final Model Performance**
-- **RMSE:** **0.9497393**
-
-This performance aligns with strong baseline collaborative filtering systems and validates the modeling approach.
+* **RMSE:** **0.9497393**
+  > Measured on the same discrete, 1-5 star scale that ratings are.
 
 ---
 
-## 📉 Seasonal Bias Line Plot — *Temporal Sentiment Oscillation*
+## Seasonal Bias Line Plot — *Temporal Sentiment Oscillation*
 
-This visualization isolates the learned temporal bias component (\( b_t \)) within the Regularized Matrix Factorization architecture, illustrating how SGD optimization adjusts predictions solely based on the month of observation.
+This visualization (0) isolates the learned temporal bias component (\( b_t \)) within the Regularized Matrix Factorization architecture, illustrating how SGD optimization adjusts predictions solely based on the given month.
 
 The data exhibits a pronounced seasonal oscillation:
-- **Lowest bias (most negative)** in January
-- **Highest bias (least negative)** during July–August
+* **Lowest bias (most negative)** January
+* **Highest bias (least negative)** July–August
 
 This term effectively acts as a variable intercept, modulating the global mean independently of user preferences (\( p_u \)) or movie characteristics (\( q_i \)). The pattern confirms that the model successfully disentangled a latent seasonal signal, correcting systematic mid-year optimism and early-year rating harshness to minimize global RMSE.
 
 ---
 
-## 📐 Calibration Curve by True Rating — *Model Reliability Diagnostics*
+## Calibration Curve by True Rating — *Model Reliability Diagnostics*
 
-This diagnostic evaluates conditional bias by plotting:
+This diagnostic (1) evaluates conditional bias by plotting:
 
 \[
 \mathbb{E}[\hat{r} \mid r]
@@ -178,59 +175,56 @@ This diagnostic evaluates conditional bias by plotting:
 against true ratings.
 
 Key findings:
-- Clear **S-shaped deviation** from the identity line
-- Overprediction of low ratings (1–2 stars)
-- Underprediction of high ratings (4–5 stars)
+* **S-shaped deviation** from the identity line
+* Overprediction of low ratings (1–2 stars)
+* Underprediction of high ratings (4–5 stars)
 
-This compression reflects the effect of **L2 regularization**, which penalizes extreme latent magnitudes and pulls predictions toward the global mean. The model prioritizes low-variance predictions in sparse regions, achieving best calibration around the dense mid-range (≈3 stars).
+This compression reflects the effect of **L2 regularization**, which penalizes extreme latent magnitudes and pulls predictions toward the global mean. The model prioritizes low-variance predictions in sparse regions, achieving best calibration around the dense mid-range (~3 stars).
 
-This visualization informs future improvement directions (loss functions, asymmetric penalties, factor scaling).
+The diagnostic also informs future directions for improvement (loss functions, asymmetric penalties, factor scaling).
 
 ---
 
-## 🎬 Ratings by Age — *Temporal Content Selection Bias*
+## Ratings by Age — *Temporal Content Selection Bias*
 
-This analysis aggregates ratings into non-uniform bins by **years since release**, revealing a non-linear relationship between content age and perceived quality.
+This analysis (2) aggregates ratings into non-uniform bins by **years since release**, revealing a non-linear relationship between content age and perceived quality.
 
 Observed dynamics:
-- Mild post-release regression (2–5 years)
-- Strong monotonic increase for films older than 10 years
-- Peak average rating in the 50+ year bucket (\( \mu \approx 3.88 \))
+* Mild post-release regression (2–5 years)
+* Strong monotonic increase for films older than 10 years
+* Peak average rating in the 50+ year bucket (\( \mu \approx 3.88 \))
 
-This pattern quantifies **survivorship bias**: older films that continue to be rated are disproportionately well-regarded classics. Contemporary ratings of legacy content are highly selective, filtering out mediocre films and inflating long-horizon averages.
-
----
-
-## 🔍 Key Takeaways
-
-- Temporal effects are **first-order signals**, not noise, in recommender systems
-- Regularized matrix factorization can be extended to model interpretable seasonal structure
-- Calibration diagnostics are critical for understanding *how* models fail, not just *how much*
-- User interaction data reflects selection effects as much as preference
+This pattern quantifies **survivorship bias**: contemporary ratings of legacy content are highly selective: older films that continue to be rated are disproportionately well-regarded classics, while mediocre films are filtered out.
 
 ---
 
-## 🚀 Future Extensions
+## Key Takeaways
 
-- Time-aware latent factors (dynamic embeddings)
-- Bayesian treatment of temporal uncertainty
-- Asymmetric loss functions for rating extremes
-- Exposure-aware modeling to correct survivorship bias
+* Temporal effects are **first-order signals**, not noise, in recommender systems
+* Regularized matrix factorization can be extended to model interpretable seasonal structure
+* Calibration diagnostics are critical for understanding *how* models fail, not just *how much*
+* User interaction data reflects selection effects as much as preference for what is being selected
 
 ---
 
-## 🧾 Technologies Used
+## Future Extensions
 
-- Python
-- NumPy / pandas
-- Custom SGD optimization
-- Matplotlib / Seaborn
-- Large-scale data parsing pipelines
+* Time-aware latent factors (dynamic embeddings)
+* Asymmetric loss functions for rating extremes
+
+---
+
+## Technologies Used
+
+* Python
+* NumPy / pandas
+* Custom SGD optimization
+* Matplotlib / Seaborn
+* Large-scale data parsing pipelines
 
 ---
 
 ## 📎 Acknowledgments
-Pascal Wallisch, PhD.
-Dataset sourced from the Netflix Prize Cinematch competition (2006).  
+Pascal Wallisch, PhD.  
+Data sourced from the Netflix Prize Cinematch Competition (2006).  
 This project is for analytical purposes only.
-
