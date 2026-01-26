@@ -75,15 +75,15 @@ This avoided introducing artificial signal while maintaining interpretability. M
 
 The recommender system is interpreted as a **regularized regression problem** where ratings are modeled as:
 
-\[
+$$
 \hat{r}_{ui} = \mu + b_u + b_i + b_t + p_u^\top q_i
-\]
+$$
 
 Where:
-* \( \mu \) is the global mean rating  
-* \( b_u \) and \( b_i \) are user and item bias terms  
-* \( b_t \) is a **learned temporal (seasonal) bias**  
-* \( p_u \) and \( q_i \) are latent factor vectors  
+* $\mu$ is the global mean rating  
+* $b_u$ and $b_i$ are user and item bias terms  
+* $b_t$ is a **learned temporal (seasonal) bias**  
+* $p_u$ and $q_i$ are latent factor vectors  
 
 ### Optimization
 
@@ -154,13 +154,13 @@ User sentiment varies by time of year, independent of movie quality.
 
 ## Seasonal Bias Line Plot — *Temporal Sentiment Oscillation*
 
-This visualization (0) isolates the learned temporal bias component (\( b_t \)) within the Regularized Matrix Factorization architecture, illustrating how SGD optimization adjusts predictions solely based on the given month.
+This visualization (0) isolates the learned temporal bias component $b_t$ within the Regularized Matrix Factorization architecture, illustrating how SGD optimization adjusts predictions solely based on the given month.
 
 The data exhibits a pronounced seasonal oscillation:
 * **Lowest bias (most negative)** January
 * **Highest bias (least negative)** July–August
 
-This term effectively acts as a variable intercept, modulating the global mean independently of user preferences (\( p_u \)) or movie characteristics (\( q_i \)). The pattern confirms that the model successfully disentangled a latent seasonal signal, correcting systematic mid-year optimism and early-year rating harshness to minimize global RMSE.
+This term effectively acts as a variable intercept, modulating the global mean independently of user preferences $p_u$ or movie characteristics $q_i$. The pattern confirms that the model successfully disentangled a latent seasonal signal, correcting systematic mid-year optimism and early-year rating harshness to minimize global RMSE.
 
 ---
 
@@ -168,9 +168,9 @@ This term effectively acts as a variable intercept, modulating the global mean i
 
 This diagnostic (1) evaluates conditional bias by plotting:
 
-\[
+$$
 \mathbb{E}[\hat{r} \mid r]
-\]
+$$
 
 against true ratings.
 
@@ -192,7 +192,7 @@ This analysis (2) aggregates ratings into non-uniform bins by **years since rele
 Observed dynamics:
 * Mild post-release regression (2–5 years)
 * Strong monotonic increase for films older than 10 years
-* Peak average rating in the 50+ year bucket (\( \mu \approx 3.88 \))
+* Peak average rating in the 50+ year bucket $\mu \approx 3.88$
 
 This pattern quantifies **survivorship bias**: contemporary ratings of legacy content are highly selective: older films that continue to be rated are disproportionately well-regarded classics, while mediocre films are filtered out.
 
