@@ -69,6 +69,8 @@ movies_df = pd.read_csv(
     engine="python"
 )
 
+movies_df = movies_df.dropna(subset=['movie_id', 'release_year'])
+
 print(movies_df.head())
 print()
 print(movies_df.dtypes)
@@ -147,7 +149,7 @@ print("Unique movies in test:", test_df['movie_id'].nunique())
     user not rating a movie is meaningful, so not replacing with 0s
     preserves user taste, movie popularity, selective exposure behavior
 '''
-# user and movie means (only training data) IMPUTATION BEGIN HERE
+# user and movie means (only training data)
 user_mean = train_df.groupby('user_id')['rating'].mean()
 movie_mean = train_df.groupby('movie_id')['rating'].mean()
 global_mean = train_df['rating'].mean()
@@ -246,7 +248,9 @@ def predict(row):
 test_df['pred'] = test_df.apply(predict, axis=1)
 
 rmse = np.sqrt(np.mean((test_df['rating'] - test_df['pred']) ** 2))
+print()
 print("Test RMSE:", rmse)
+print()
 
 # vis 1 seasonal bias line plot
 avg_seasonal_bias = bm_month.mean(axis=0)
