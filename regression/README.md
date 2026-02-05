@@ -1,4 +1,4 @@
-# RateShift
+# ReelRegression
 ### Quantifying Temporal Bias and Latent Drift in Large-Scale Rating Systems
 
 > A project-based exploration of temporal structure and signal modeling, bias decomposition, and regularized matrix factorization using 27M Netflix movie ratings.
