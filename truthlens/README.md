@@ -1,7 +1,7 @@
 # TruthLens
 ### Semantic Detection of Misinformation via Transformer Embeddings
 
-> An applied study in representation learning and robust text classification, leveraging SBERT embeddings to detect misinformation in short-form social media content.
+> An applied study in representation learning and robust text classification, leveraging SBERT embeddings to detect misinformation in short-form social media content (tweets).
 
 ---
 
@@ -15,15 +15,13 @@ The final model achieves:
 * **ROC-AUC:** 0.9728  
 * **PR-AUC:** 0.9439  
 
-indicating reliable performance even under class imbalance and conservative operating regimes.
-
 ---
 
 ## Dataset Context
 
 ### Tweet-Based Misinformation Corpus
 
-The dataset consists of labeled tweets annotated as either:
+The dataset (sourced from HuggingFace) consists of pre-labeled tweets annotated as either:
 * **Misinformation**, or  
 * **Non-misinformation (factual / benign content)**
 
@@ -32,7 +30,7 @@ Key characteristics:
 * Informal language, abbreviations, and stylistic variance
 * Moderate class imbalance, reflecting real-world prevalence rates
 
-These properties make the task particularly well-suited for contextual embedding approaches, where meaning is derived holistically rather than token-by-token.
+These properties make the task particularly well-suited for holistic, contextual embedding approaches rather than token-by-token.
 
 ---
 
@@ -40,12 +38,12 @@ These properties make the task particularly well-suited for contextual embedding
 
 ### Sentence-Level Representation Learning
 
-Each tweet is transformed into a fixed-length dense vector using **SBERT (all-MiniLM-L6-v2)**:
+Each tweet is transformed into a dense, fixed-length vector using **SBERT (all-MiniLM-L6-v2)**:
 * 384-dimensional sentence embeddings
-* Pretrained on semantic similarity and natural language inference objectives
+* Pretrained on semantic similarity and natural language inference
 * Captures contextual meaning beyond keyword overlap
 
-This approach decouples **semantic understanding** from **classification**, allowing lightweight models to operate on a high-quality latent space.
+The aim is to decouple **semantic understanding** from **classification**, allowing lightweight models to operate on a high-quality latent space.
 
 ---
 
@@ -58,76 +56,66 @@ Two supervised classifiers were trained and compared on top of the SBERT embeddi
 | Logistic Regression | 0.9720 |
 | Calibrated Linear SVM | **0.9743** |
 
-The **calibrated SVM** was selected as the final model due to its:
-* Strong generalization
+The **calibrated SVM** yielded:
+* Stronger generalization
 * Margin-based robustness
-* Well-behaved probability estimates after calibration
+* Better probability estimates post calibration
 
 ---
 
 ## Evaluation Metrics
 
-Performance was evaluated on a held-out test set using threshold-independent metrics:
+Performance was evaluated on a separate test set:
 
-* **ROC-AUC:** 0.9728  
-* **PR-AUC:** 0.9439  
-
-These metrics were chosen deliberately:
-* ROC-AUC evaluates global separability across thresholds
-* PR-AUC emphasizes precision under class imbalance, critical for misinformation detection
+* **ROC-AUC:** 0.9728 | evaluates global separability across thresholds
+* **PR-AUC:** 0.9439 | emphasizes precision under class imbalance, which is likely to exist with misinf. detection
 
 ---
 
 ## Results & Analysis
 
-### Precision–Recall Curve — *High-Fidelity Retrieval*
+### Precision–Recall Curve
 
-The Precision–Recall curve maintains **near-perfect precision even beyond 80% recall**, indicating that the SBERT embeddings enable strong semantic discrimination between misinformation and factual content.
+The PR curve maintains **near-perfect precision even beyond 80% recall**, implying that the SBERT embeddings enable strong semantic discrimination b/w misin. and fact.
 
-Notably:
 * Precision does not collapse at high recall levels
-* False positives remain minimal even as sensitivity increases
+* False positives remain minimal even as sensitivity goes up
 
-This behavior is essential in real-world deployment scenarios, where **false accusations of misinformation carry significant cost**.
+This is pertinent because *false accusations of something being misinf. can exact significant costs*.
 
 ---
 
-### ROC Curve — *Latent Space Separability*
+### ROC Curve
 
-The ROC curve exhibits a steep ascent toward the top-left corner, confirming that the learned embedding space cleanly separates the two classes.
+There is a steep ascent toward the top-left corner, confirming that the learned embedding space cleanly separates the two classes.
 
-Interpretation:
 * High true positive rates are achieved with negligible increases in false positives
-* Performance remains stable across a wide range of thresholds
-
-This geometry suggests the model is **robust**, not fragile to specific operating points.
+* Performance is stable across the range of thresholds
 
 ---
 
 ## Design Choices & Rationale
 
-### Why SBERT + Classical Models?
+### SBERT & Classical Models
 
-* Avoids costly end-to-end fine-tuning
-* Enables faster experimentation and deployment
-* Improves interpretability of downstream behavior
+* No costly end-to-end fine-tuning
+* Faster experimentation and deployment
+* Improved interpretability of downstream behavior
 * Leverages strong pretrained semantic priors
 
-### Why Calibration?
+### Calibration
 
 Probability calibration ensures that model outputs:
 * Are meaningful as confidence estimates
 * Can be thresholded reliably under different policy constraints
-* Support downstream decision-making rather than raw ranking alone
 
 ---
 
 ## Key Takeaways
 
-* Semantic embeddings can dramatically simplify text classification pipelines
-* High-quality representations often matter more than model complexity
+* Semantic embeddings dramatically simplify text classification pipelines
 * Calibration and metric choice are essential for trustworthy deployment
-* SBERT embeddings provide strong resilience to noise and stylistic variation in social media text
+* SBERT embeddings are resilient to noise and textual variation in social media text
 
 ---
 
@@ -146,8 +134,6 @@ Probability calibration ensures that model outputs:
 ## Future Extensions
 
 * Domain-adaptive embedding fine-tuning
-* Multi-class misinformation taxonomy
 * Temporal drift analysis in narrative patterns
-* Human-in-the-loop threshold optimization
 
 ---
