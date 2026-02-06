@@ -46,9 +46,10 @@ To ensure robust and unbiased evaluation:
 * Fixed random seed for reproducibility
 * No overlap between sets
 
-All preprocessing steps (cleaning, scaling, PCA, encoding were:
+All preprocessing steps (cleaning, scaling, PCA, encoding) were:
 > **Fit exclusively on training data and then applied to test data**
-This prevented leakage and avoided artifically inflated performance estimates.
+
+This prevented leakage and avoided artificially inflated performance estimates.
 
 ---
 
