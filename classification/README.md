@@ -233,7 +233,7 @@ The model learns effective multi-class decision boundaries in high-D feature spa
 ## 📎 Acknowledgments
 
 Pascal Wallisch, PhD.  
-Data sourced from the Spotify USA Inc. API  
+Data sourced from Spotify USA Inc. API  
 This project is for analytical purposes only.
 
 
