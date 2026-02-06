@@ -189,9 +189,7 @@ The radar chart summarizes how each genre deviates from the global mean across n
 
 ## Final Performance
 
-**Macro-Average One-vs-Rest ROC-AUC: 0.8999**
-Representing strong discriminative performance across ten genres given:
-
+**Macro-Average One-vs-Rest ROC-AUC: 0.8999**, representing strong discriminative performance across ten genres given:
 * Strict multi-class correctness
 * No identity-based features
 * No lyrical or textual data
